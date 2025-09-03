@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pomodoro — Standalone</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f3f4f6;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:white;padding:24px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);width:360px;text-align:center}
+    button{padding:10px 16px;border-radius:8px;border:none;background:#10b981;color:white;font-weight:600;cursor:pointer}
+    input[type=number]{width:64px;padding:6px;border-radius:6px;border:1px solid #e5e7eb}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Pomodoro (Standalone)</h2>
+    <div style="font-size:48px;font-family:monospace;margin:12px 0" id="time">25:00</div>
+    <div style="margin:8px 0">
+      <button id="start">Start</button>
+      <button id="pause">Pause</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div style="margin-top:12px">
+      Work <input id="work" type="number" value="25" /> min
+    </div>
+  </div>
+
+  <audio id="beep" src="public/notification-sound.mp3"></audio>
+
+<script>
+let total = 25*60, t = total, timer = null;
+const timeEl = document.getElementById('time');
+const startBtn = document.getElementById('start');
+const pauseBtn = document.getElementById('pause');
+const resetBtn = document.getElementById('reset');
+const workInput = document.getElementById('work');
+const beep = document.getElementById('beep');
+
+function format(s){ const m = Math.floor(s/60); const sec = s%60; return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
+
+function tick(){
+  t--;
+  if(t<=0){ clearInterval(timer); timer=null; beep.play().catch(()=>{}); notify(); }
+  timeEl.textContent = format(Math.max(0,t));
+}
+
+function notify(){
+  if('Notification' in window){
+    if(Notification.permission==='granted') new Notification('Pomodoro','Work session complete!');
+    else if(Notification.permission!=='denied') Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('Pomodoro','Work session complete!')});
+  }
+}
+
+startBtn.onclick = ()=>{
+  if(!timer) timer = setInterval(tick,1000);
+}
+pauseBtn.onclick = ()=>{ if(timer){ clearInterval(timer); timer=null } }
+resetBtn.onclick = ()=>{ if(timer){ clearInterval(timer); timer=null } t = total = Number(workInput.value || 25)*60; timeEl.textContent = format(total); }
+
+workInput.onchange = ()=>{ total = Number(workInput.value || 25)*60; t = total; timeEl.textContent = format(total); }
+timeEl.textContent = format(total);
+</script>
+</body>
+</html>
